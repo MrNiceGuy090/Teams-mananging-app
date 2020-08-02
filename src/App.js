@@ -1,10 +1,10 @@
 import React from "react";
-import { SideBar } from "./components/Drawer/index";
+import SideBar from "./components/Drawer/index";
 
 function App() {
   return (
     <div className="App">
-      <SideBar></SideBar>
+      <SideBar>heh</SideBar>
     </div>
   );
 }

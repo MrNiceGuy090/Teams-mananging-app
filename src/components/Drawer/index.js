@@ -1,5 +1,12 @@
 import React from "react";
-import { Drawer } from "@material-ui/core";
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+} from "@material-ui/core";
+import { GroupIcon, PeopleOutlineIcon } from "@material-ui/icons";
 
 class SideBar extends React.Component {
   constructor(props) {
@@ -8,21 +15,39 @@ class SideBar extends React.Component {
 
   render() {
     return (
-      <Drawer
-        className={classes.drawer}
-        variant="permanent"
-        classes={{
-          paper: classes.drawerPaper,
-        }}
-        anchor="left"
-      >
-        <h1>SideBar</h1>
-        <h1>SideBar</h1>
-        <h1>SideBar</h1>
-        <h1>SideBar</h1>
+      <Drawer variant="permanent" elevation="24" open="true">
+        <List>
+          <ListItem button>
+            <ListItemIcon>
+              <GroupIcon></GroupIcon>
+            </ListItemIcon>
+            <ListItemText primary="Teams" />
+          </ListItem>
+
+          <ListItem button>
+            <ListItemIcon>
+              <PeopleAltOutlined></PeopleAltOutlined>
+            </ListItemIcon>
+            <ListItemText primary="Close friends" />
+          </ListItem>
+
+          <ListItem button>
+            <ListItemIcon>
+              <GroupIcon></GroupIcon>
+            </ListItemIcon>
+            <ListItemText primary="Teams" />
+          </ListItem>
+
+          <ListItem button>
+            <ListItemIcon>
+              <GroupIcon></GroupIcon>
+            </ListItemIcon>
+            <ListItemText primary="Teams" />
+          </ListItem>
+        </List>
       </Drawer>
     );
   }
 }
 
-export SideBar;
+export default SideBar;
