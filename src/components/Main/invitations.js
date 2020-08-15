@@ -83,52 +83,101 @@ class Invitations extends React.Component {
 
   acceptInvite(index) {
     this.setState({ isLoading: true });
-    console.log(this.state);
     this.props.firebase.db
       .collection("Users")
       .doc(this.context.uid)
       .get()
       .then((doc) => {
+        let teamUid = this.state.invites[index];
         // move team from teamInvites to teams for the current user
         var invites = doc.data().teamInvites;
         invites = invites.filter((item) => item !== this.state.invites[index]);
         var newTeams = doc.data().teams;
         newTeams.push(this.state.invites[index]);
-        console.log(invites, newTeams);
         this.props.firebase.db
           .collection("Users")
           .doc(this.context.uid)
-          .update({ teamInvites: invites, teams: newTeams });
-        // delete user from team pending requests
+          .update({ teamInvites: invites, teams: newTeams })
+          .then(
+            // update states
+            this.setState((state) => {
+              this.state.invites.splice(index, 1);
+              this.state.invitesPics.splice(index, 1);
+              this.state.invitesName.splice(index, 1);
+              this.state.teamSizes.splice(index, 1);
+              return {};
+            }),
+            this.setState({ isLoading: false })
+          );
+        // move user from team pending requests to team members
         this.props.firebase.db
           .collection("Teams")
-          .doc(this.state.invites[index])
+          .doc(teamUid)
+          .get()
+          .then((dox) => {
+            var pendings = dox.data().pendingReq;
+            pendings = pendings.filter((item) => item !== this.context.uid);
+            console.log(pendings);
+            this.props.firebase.db
+              .collection("Teams")
+              .doc(teamUid)
+              .update({ pendingReq: pendings });
+            this.props.firebase.db
+              .collection("Teams")
+              .doc(teamUid)
+              .get()
+              .then((doc) => {
+                let newMembers = doc.data().members;
+                newMembers.push(this.context.uid);
+                this.props.firebase.db
+                  .collection("Teams")
+                  .doc(teamUid)
+                  .update({ members: newMembers });
+              });
+          });
+      });
+  }
+
+  declineInvite(index) {
+    this.setState({ isLoading: true });
+    this.props.firebase.db
+      .collection("Users")
+      .doc(this.context.uid)
+      .get()
+      .then((doc) => {
+        let teamUid = this.state.invites[index];
+        // delete team from teamInvites for the current user
+        var invites = doc.data().teamInvites;
+        invites = invites.filter((item) => item !== this.state.invites[index]);
+        this.props.firebase.db
+          .collection("Users")
+          .doc(this.context.uid)
+          .update({ teamInvites: invites })
+          .then(
+            // update states
+            this.setState((state) => {
+              this.state.invites.splice(index, 1);
+              this.state.invitesPics.splice(index, 1);
+              this.state.invitesName.splice(index, 1);
+              this.state.teamSizes.splice(index, 1);
+              return {};
+            }),
+            this.setState({ isLoading: false })
+          );
+        // remove user from team pending requests
+        this.props.firebase.db
+          .collection("Teams")
+          .doc(teamUid)
           .get()
           .then((dox) => {
             var pendings = dox.data().pendingReq;
             pendings = pendings.filter((item) => item !== this.context.uid);
             this.props.firebase.db
               .collection("Teams")
-              .doc(this.state.invites[index])
+              .doc(teamUid)
               .update({ pendingReq: pendings });
           });
       });
-    // update states
-    console.log(this.state);
-    this.setState((state) => {
-      let invitesList = this.state.invites.splice(index, 1);
-      let invitesPicsList = this.state.invitesPics.splice(index, 1);
-      let invitesNameList = this.state.invitesName.splice(index, 1);
-      let teamSizesList = this.state.teamSizes.splice(index, 1);
-      return {
-        invites: invitesList,
-        invitesPics: invitesPicsList,
-        invitesName: invitesNameList,
-        teamSizes: teamSizesList,
-      };
-    });
-    this.setState({ isLoading: false });
-    console.log(this.state);
   }
 
   render() {
@@ -175,7 +224,9 @@ class Invitations extends React.Component {
                             </IconButton>
                           </Grid>
                           <Grid item xs={3} className={classes.centerItems}>
-                            <IconButton>
+                            <IconButton
+                              onClick={() => this.declineInvite(index)}
+                            >
                               <ClearIcon />
                             </IconButton>
                           </Grid>
