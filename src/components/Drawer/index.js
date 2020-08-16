@@ -22,6 +22,7 @@ const styles = (theme) => ({
     width: drawerWidth,
     transition: `200ms ease-in-out`,
     overflow: "hidden",
+    backgroundColor: "#b4dfe5",
   },
   drawerClosed: {
     transition: `200ms ease-in-out`,
@@ -30,6 +31,7 @@ const styles = (theme) => ({
       width: theme.spacing(7) + 1,
     },
     overflow: "hidden",
+    backgroundColor: "#b4dfe5",
   },
   flexRight: {
     display: "flex",

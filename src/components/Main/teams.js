@@ -58,6 +58,7 @@ const styles = (theme) => ({
   paddingForm: {
     padding: "30px",
   },
+  teamCard: {},
 });
 
 class Teams extends React.Component {
@@ -312,7 +313,7 @@ class Teams extends React.Component {
                 {this.state.teamsName.map((value, index) => {
                   return (
                     <Grid item xs={4} key={index}>
-                      <Card>
+                      <Card className={classes.teamCard}>
                         <CardActionArea>
                           <CardMedia
                             image={this.state.teamsPic[index]}
