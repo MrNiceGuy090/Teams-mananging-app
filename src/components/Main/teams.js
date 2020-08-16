@@ -74,6 +74,7 @@ class Teams extends React.Component {
       membersUid: [""],
       teamName: "", // create team form team name
       file: "", // local filepath to image from create team form
+      teamActive: null,
     };
     this.addMember = this.addMember.bind(this);
     this.handleTeamNameChange = this.handleTeamNameChange.bind(this);
@@ -81,6 +82,12 @@ class Teams extends React.Component {
     this.handleClose = this.handleClose.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
   }
+  // clicked on a team
+  changeTeamActive(index) {
+    const teamAtIndex = this.state.teams[index];
+    this.setState({ teamActive: teamAtIndex });
+  }
+
   // called by getTeams() to get images from team Id's and team names
   getTeamsPic(index) {
     this.props.firebase.db
@@ -297,112 +304,128 @@ class Teams extends React.Component {
   }
   componentDidMount() {
     this.getTeams();
+    console.log("Mounterd");
   }
 
   render() {
     const { classes } = this.props;
     const isLoading = this.state.loading;
+    const teamActive = this.state.teamActive;
+
     return (
       <div>
-        {isLoading ? (
-          <h1 style={this.props.style}>Loading...</h1>
+        {teamActive ? (
+          <h1 style={this.props.style}>{this.state.teamActive}</h1>
         ) : (
-          <AuthUserContext.Consumer>
-            {(authUser) => (
-              <Grid container spacing={6} style={this.props.style}>
-                {this.state.teamsName.map((value, index) => {
-                  return (
-                    <Grid item xs={4} key={index}>
-                      <Card className={classes.teamCard}>
+          <div>
+            {isLoading ? (
+              <h1 style={this.props.style}>Loading...</h1>
+            ) : (
+              <AuthUserContext.Consumer>
+                {(authUser) => (
+                  <Grid container spacing={6} style={this.props.style}>
+                    {this.state.teamsName.map((value, index) => {
+                      return (
+                        <Grid item xs={4} key={index}>
+                          <Card
+                            className={classes.teamCard}
+                            onClick={() => this.changeTeamActive(index)}
+                          >
+                            <CardActionArea>
+                              <CardMedia
+                                image={this.state.teamsPic[index]}
+                                className={classes.media}
+                                title="Team"
+                              ></CardMedia>
+                              <CardContent>
+                                <Typography variant="h5" component="h2">
+                                  {value}
+                                </Typography>
+                              </CardContent>
+                            </CardActionArea>
+                          </Card>
+                        </Grid>
+                      );
+                    })}
+
+                    <Grid item xs={4}>
+                      <Card onClick={this.handleOpen}>
                         <CardActionArea>
-                          <CardMedia
-                            image={this.state.teamsPic[index]}
-                            className={classes.media}
-                            title="Team"
-                          ></CardMedia>
+                          <AddIcon className={classes.media}></AddIcon>
                           <CardContent>
                             <Typography variant="h5" component="h2">
-                              {value}
+                              Add team
                             </Typography>
                           </CardContent>
                         </CardActionArea>
                       </Card>
                     </Grid>
-                  );
-                })}
+                    <Modal
+                      open={this.state.modalOpen}
+                      onClose={this.handleClose}
+                      BackdropComponent={Backdrop}
+                    >
+                      <Fade className={classes.modal} in={this.state.modalOpen}>
+                        <form>
+                          <img
+                            src={this.state.file}
+                            className={classes.modalImage}
+                          />
 
-                <Grid item xs={4}>
-                  <Card onClick={this.handleOpen}>
-                    <CardActionArea>
-                      <AddIcon className={classes.media}></AddIcon>
-                      <CardContent>
-                        <Typography variant="h5" component="h2">
-                          Add team
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-                <Modal
-                  open={this.state.modalOpen}
-                  onClose={this.handleClose}
-                  BackdropComponent={Backdrop}
-                >
-                  <Fade className={classes.modal} in={this.state.modalOpen}>
-                    <form>
-                      <img
-                        src={this.state.file}
-                        className={classes.modalImage}
-                      />
-
-                      <div className={classes.paddingForm}>
-                        <h1>Create team</h1>
-                        <TextField
-                          required={true}
-                          id="teamNameField"
-                          label="Team's name"
-                          name="teamName"
-                          type="text"
-                          onChange={this.handleTeamNameChange}
-                        />
-                        <br className={classes.margTop}></br>
-                        <h3>Team photo</h3>
-                        <input type="file" onChange={this.handleImageUpload} />
-                        <h3 className={classes.margTop}>Members</h3>
-                        {this.state.membersEmail.map((value, index) => {
-                          return (
-                            <div key={index}>
-                              <TextField
-                                required
-                                label="Member's email"
-                                value={value.email}
-                                onChange={(e) =>
-                                  this.handleInputChangeMemberAdd(e, index)
-                                }
-                              />
-                              <IconButton
-                                onClick={() => this.removeMember(index)}
-                              >
-                                <RemoveIcon></RemoveIcon>
-                              </IconButton>
-                              {this.state.membersEmail.length - 1 === index && (
-                                <IconButton onClick={this.addMember}>
-                                  <AddIcon></AddIcon>
-                                </IconButton>
-                              )}
-                            </div>
-                          );
-                        })}
-                        <button type="submit" onClick={this.handleSubmit}>
-                          Submit
-                        </button>
-                      </div>
-                    </form>
-                  </Fade>
-                </Modal>
-              </Grid>
+                          <div className={classes.paddingForm}>
+                            <h1>Create team</h1>
+                            <TextField
+                              required={true}
+                              id="teamNameField"
+                              label="Team's name"
+                              name="teamName"
+                              type="text"
+                              onChange={this.handleTeamNameChange}
+                            />
+                            <br className={classes.margTop}></br>
+                            <h3>Team photo</h3>
+                            <input
+                              type="file"
+                              onChange={this.handleImageUpload}
+                            />
+                            <h3 className={classes.margTop}>Members</h3>
+                            {this.state.membersEmail.map((value, index) => {
+                              return (
+                                <div key={index}>
+                                  <TextField
+                                    required
+                                    label="Member's email"
+                                    value={value.email}
+                                    onChange={(e) =>
+                                      this.handleInputChangeMemberAdd(e, index)
+                                    }
+                                  />
+                                  <IconButton
+                                    onClick={() => this.removeMember(index)}
+                                  >
+                                    <RemoveIcon></RemoveIcon>
+                                  </IconButton>
+                                  {this.state.membersEmail.length - 1 ===
+                                    index && (
+                                    <IconButton onClick={this.addMember}>
+                                      <AddIcon></AddIcon>
+                                    </IconButton>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            <button type="submit" onClick={this.handleSubmit}>
+                              Submit
+                            </button>
+                          </div>
+                        </form>
+                      </Fade>
+                    </Modal>
+                  </Grid>
+                )}
+              </AuthUserContext.Consumer>
             )}
-          </AuthUserContext.Consumer>
+          </div>
         )}
       </div>
     );
