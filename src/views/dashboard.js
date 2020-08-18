@@ -7,7 +7,14 @@ import Invitations from "../components/Main/invitations";
 import { withStyles } from "@material-ui/core/styles";
 import { AuthUserContext } from "../components/Session";
 import { withFirebase } from "../components/Firebase";
-const styles = (theme) => ({});
+import { Switch, Route, BrowserRouter } from "react-router-dom";
+import SingleTeam from "../components/Main/singleTeam";
+
+const styles = (theme) => ({
+  noTop: {
+    marginTop: 0,
+  },
+});
 // conditional rendering based on auth
 
 class Dashboard extends React.Component {
@@ -27,7 +34,6 @@ class Dashboard extends React.Component {
     } else {
       this.setState({ sideBarState: "open" });
     }
-    console.log(this.state.sideBarState);
   }
   handleChangeMenuItem(val) {
     this.setState({ active: val });
@@ -54,34 +60,41 @@ class Dashboard extends React.Component {
     }
     return (
       <div className="App">
-        <AuthUserContext.Consumer>
-          {(authUser) =>
-            authUser ? (
-              <div>
-                <TopBar small={this.state.sideBarState}></TopBar>
-                <SideBar
-                  state={this.state.sideBarState}
-                  onMenuChange={this.handleMenuChange}
-                  onChangeMenuItem={this.handleChangeMenuItem}
-                ></SideBar>
-                {(() => {
-                  switch (this.state.active) {
-                    case "Teams":
-                      return <Teams style={containerStyle}></Teams>;
-                    case "Close friends":
-                      return <InnerGrid style={containerStyle}></InnerGrid>;
-                    case "Team invitations":
-                      return <Invitations style={containerStyle}></Invitations>;
-                    default:
-                      return null;
-                  }
-                })()}
-              </div>
-            ) : (
-              <h1>Not registred</h1>
-            )
-          }
-        </AuthUserContext.Consumer>
+        <BrowserRouter>
+          <AuthUserContext.Consumer>
+            {(authUser) =>
+              authUser ? (
+                <div>
+                  <TopBar small={this.state.sideBarState}></TopBar>
+                  <SideBar
+                    state={this.state.sideBarState}
+                    onMenuChange={this.handleMenuChange}
+                    onChangeMenuItem={this.handleChangeMenuItem}
+                  ></SideBar>
+                  <Switch>
+                    <Route exact path="/home">
+                      <Teams style={containerStyle}></Teams>
+                    </Route>
+                    <Route exact path="/home/closeFriends">
+                      <InnerGrid style={containerStyle}></InnerGrid>
+                    </Route>
+                    <Route exact path="/home/invitations">
+                      <Invitations style={containerStyle}></Invitations>
+                    </Route>
+                    <Route path="/home/team/:team">
+                      <SingleTeam
+                        style={containerStyle}
+                        className={classes.noTop}
+                      ></SingleTeam>
+                    </Route>
+                  </Switch>
+                </div>
+              ) : (
+                <h1>Not registred</h1>
+              )
+            }
+          </AuthUserContext.Consumer>
+        </BrowserRouter>
       </div>
     );
   }

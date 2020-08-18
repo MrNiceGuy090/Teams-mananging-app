@@ -31,17 +31,14 @@ class App extends React.Component {
     return (
       <AuthUserContext.Provider value={this.state.authUser}>
         <BrowserRouter>
-          <div>
-            <Route exact path={LANDING} component={LandingPage} />
-            <Route
-              exact
-              path={DASHBOARD}
-              component={Dashboard}
-              authUser={this.state.authUser}
-            />
-            <Route exact path={SIGN_UP} component={SignUpPage} />
-            <Route exact path={SIGN_IN} component={SignInPage} />
-          </div>
+          <Route exact path={LANDING} component={LandingPage} />
+          <Route
+            path={DASHBOARD}
+            component={Dashboard}
+            authUser={this.state.authUser}
+          />
+          <Route exact path={SIGN_UP} component={SignUpPage} />
+          <Route exact path={SIGN_IN} component={SignInPage} />
         </BrowserRouter>
       </AuthUserContext.Provider>
     );

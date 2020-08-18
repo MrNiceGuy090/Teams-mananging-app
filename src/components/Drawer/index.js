@@ -14,6 +14,7 @@ import { withStyles } from "@material-ui/core/styles";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import Divider from "@material-ui/core/Divider";
+import { Link } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -100,48 +101,36 @@ class SideBar extends React.Component {
         </div>
         <Divider />
         <List style={{ margin: 0 }}>
-          <ListItem
-            button
-            key="Teams"
-            value="Teams"
-            onClick={this.changeMenuItem}
+          <Link to="/home" style={{ textDecoration: "none", color: "black" }}>
+            <ListItem>
+              <ListItemIcon>
+                <GroupIcon></GroupIcon>
+              </ListItemIcon>
+              <ListItemText primary="Teams" />
+            </ListItem>
+          </Link>
+          <Link
+            to="/home/closeFriends"
+            style={{ textDecoration: "none", color: "black" }}
           >
-            <ListItemIcon>
-              <GroupIcon></GroupIcon>
-            </ListItemIcon>
-            <ListItemText primary="Teams" />
-          </ListItem>
-
-          <ListItem
-            button
-            key="Close friends"
-            value="Close friends"
-            onClick={this.changeMenuItem}
+            <ListItem>
+              <ListItemIcon>
+                <PeopleOutlineIcon></PeopleOutlineIcon>
+              </ListItemIcon>
+              <ListItemText primary="Close friends" />
+            </ListItem>
+          </Link>
+          <Link
+            to="/home/invitations"
+            style={{ textDecoration: "none", color: "black" }}
           >
-            <ListItemIcon>
-              <PeopleOutlineIcon></PeopleOutlineIcon>
-            </ListItemIcon>
-            <ListItemText primary="Close friends" />
-          </ListItem>
-
-          <ListItem
-            button
-            key="Team invitations"
-            value="Team invitations"
-            onClick={this.changeMenuItem}
-          >
-            <ListItemIcon>
-              <GroupAddIcon></GroupAddIcon>
-            </ListItemIcon>
-            <ListItemText primary="Team invitations" />
-          </ListItem>
-
-          <ListItem button key="Settings">
-            <ListItemIcon>
-              <SettingsIcon></SettingsIcon>
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <GroupAddIcon></GroupAddIcon>
+              </ListItemIcon>
+              <ListItemText primary="Team invitations" />
+            </ListItem>
+          </Link>
         </List>
       </Drawer>
     );

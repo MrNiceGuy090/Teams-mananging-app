@@ -19,7 +19,7 @@ import {
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import RemoveIcon from "@material-ui/icons/Remove";
-
+import { Link } from "react-router-dom";
 import { withFirebase } from "../Firebase";
 import { AuthUserContext } from "../Session";
 import Modal from "@material-ui/core/Modal";
@@ -327,23 +327,28 @@ class Teams extends React.Component {
                     {this.state.teamsName.map((value, index) => {
                       return (
                         <Grid item xs={4} key={index}>
-                          <Card
-                            className={classes.teamCard}
-                            onClick={() => this.changeTeamActive(index)}
+                          <Link
+                            to={`/home/team/${this.state.teams[index]}`}
+                            style={{ textDecoration: "none", color: "black" }}
                           >
-                            <CardActionArea>
-                              <CardMedia
-                                image={this.state.teamsPic[index]}
-                                className={classes.media}
-                                title="Team"
-                              ></CardMedia>
-                              <CardContent>
-                                <Typography variant="h5" component="h2">
-                                  {value}
-                                </Typography>
-                              </CardContent>
-                            </CardActionArea>
-                          </Card>
+                            <Card
+                              className={classes.teamCard}
+                              onClick={() => this.changeTeamActive(index)}
+                            >
+                              <CardActionArea>
+                                <CardMedia
+                                  image={this.state.teamsPic[index]}
+                                  className={classes.media}
+                                  title="Team"
+                                ></CardMedia>
+                                <CardContent>
+                                  <Typography variant="h5" component="h2">
+                                    {value}
+                                  </Typography>
+                                </CardContent>
+                              </CardActionArea>
+                            </Card>
+                          </Link>
                         </Grid>
                       );
                     })}

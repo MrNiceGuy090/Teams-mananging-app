@@ -3,7 +3,6 @@ import AppBar from "@material-ui/core/AppBar";
 import Avatar from "@material-ui/core/Avatar";
 import Toolbar from "@material-ui/core/Toolbar";
 import { withStyles } from "@material-ui/core/styles";
-import SignOutButton from "../views/sign_out";
 import { AuthUserContext } from "./Session";
 import { withFirebase } from "./Firebase";
 
@@ -52,6 +51,7 @@ class TopBar extends React.Component {
     this.getFileBlob = this.getFileBlob.bind(this);
     this.storeImage = this.storeImage.bind(this);
     this.changeProfilePic = this.changeProfilePic.bind(this);
+    this.signOut = this.signOut.bind(this);
   }
 
   handleAvatarClick(e) {
@@ -109,6 +109,9 @@ class TopBar extends React.Component {
         .then(this.setState({ profilePic: image })); // updates the profile pic from local saved image
     });
   }
+  signOut() {
+    this.props.firebase.doSignOut();
+  }
 
   render() {
     const { classes } = this.props;
@@ -152,9 +155,7 @@ class TopBar extends React.Component {
                   ></input>
                   Change profile picture
                 </MenuItem>
-                <MenuItem onClick={this.handleUserOptionsClose}>
-                  <SignOutButton></SignOutButton>
-                </MenuItem>
+                <MenuItem onClick={this.signOut}>Sign Out</MenuItem>
               </Menu>
             </Toolbar>
           </AppBar>
