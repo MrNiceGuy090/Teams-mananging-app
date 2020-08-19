@@ -64,7 +64,7 @@ const styles = (theme) => ({
 class Task extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { modalOpen: false };
+    this.state = { modalOpen: false, participants: [], participantsPics: [] };
     this.handleModalClose = this.handleModalClose.bind(this);
     this.handleModalOpen = this.handleModalOpen.bind(this);
   }
@@ -76,9 +76,32 @@ class Task extends React.Component {
   handleModalClose() {
     this.setState({ modalOpen: false });
   }
+  componentDidMount() {
+    for (let x of this.props.dbObject.participants) {
+      let user = x;
+      this.props.firebase.db
+        .collection("Users")
+        .doc(user)
+        .get()
+        .then((doc) => {
+          const list = this.state.participants.concat(doc.data());
+          this.setState({ participants: list });
+          console.log(this.state.participants);
+        });
+
+      this.props.firebase.storageRef
+        .child(`Users/ProfilePics/${user}`)
+        .getDownloadURL()
+        .then((url) => {
+          const list = this.state.participantsPics.concat(url);
+          this.setState({ participantsPics: list });
+        });
+    }
+  }
 
   render() {
     const { classes } = this.props;
+    console.log(this.props.dbObject);
     return (
       <div style={{ padding: 0 }}>
         <AuthUserContext.Consumer>
@@ -90,10 +113,17 @@ class Task extends React.Component {
                 onClick={this.handleModalOpen}
               >
                 <CardContent className={classes.component}>
-                  <p className={classes.title}>Card1</p>
+                  <p className={classes.title}>{this.props.dbObject.title}</p>
                   <div className={classes.avatarsContainer}>
-                    <Avatar size="small" className={classes.avatar}></Avatar>
-                    <Avatar size="small" className={classes.avatar}></Avatar>
+                    {this.state.participantsPics.map((value, index) => {
+                      return (
+                        <Avatar
+                          size="small"
+                          className={classes.avatar}
+                          src={value}
+                        ></Avatar>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -110,28 +140,29 @@ class Task extends React.Component {
                         <b>Members</b>
                       </p>
                       {/* container for members that participate to the task */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <Avatar
-                          size="small"
-                          flexItem
-                          style={{ alignSelf: "center" }}
-                        />
-                        <p flexItem>Alexandrescu Costel Rudi Garcia</p>
-                        <div className={classes.break}></div>
 
-                        <Avatar
-                          size="small"
-                          flexItem
-                          style={{ alignSelf: "center", flexShrink: 0 }}
-                        />
-                        <p flexItem>G</p>
-                        <div className={classes.break}></div>
-                      </div>
+                      {this.state.participants.map((value, index) => {
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Avatar
+                              size="small"
+                              flexItem
+                              style={{
+                                alignSelf: "center",
+                                marginRight: "10px",
+                              }}
+                              src={this.state.participantsPics[index]}
+                            />
+                            <p flexItem>{value.username}</p>
+                            <div className={classes.break}></div>
+                          </div>
+                        );
+                      })}
                     </div>
                     <Divider
                       orientation="vertical"
@@ -140,20 +171,18 @@ class Task extends React.Component {
                     />
                     <div className={classes.spacer}></div>
                     <div className={classes.taskDetails}>
-                      <h1>Tiltlu task</h1>
+                      <h1>{this.props.dbObject.title}</h1>
                       <p>
                         <b>Description</b>
                       </p>
-                      <p>
-                        Decsriere pe lung a taskului cu tpt felul de detalii
-                        useless dar destul de lungi sa fie importante nu?
-                      </p>
+                      <p>{this.props.dbObject.description}</p>
                       <p>
                         <b>Updates</b>
                       </p>
                       <p>Mesages</p>
                       <Button> Join </Button>
                       <Button> Follow </Button>
+                      <Button>Move</Button>
                     </div>
                   </div>
                 </Fade>
