@@ -101,7 +101,6 @@ class Task extends React.Component {
 
   render() {
     const { classes } = this.props;
-    console.log(this.props.dbObject);
     return (
       <div style={{ padding: 0 }}>
         <AuthUserContext.Consumer>

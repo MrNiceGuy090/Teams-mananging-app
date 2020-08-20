@@ -36,6 +36,7 @@ class SignUpFormBase extends Component {
           uid: authUser.user.uid,
           email: this.state.email,
           teams: [],
+          tasks: [],
         });
         console.log(this.state.username);
         this.props.history.push(ROUTES.DASHBOARD);

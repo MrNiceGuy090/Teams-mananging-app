@@ -215,7 +215,7 @@ class Teams extends React.Component {
     console.log(this.state.membersUid);
     for (var user of this.state.membersUid) {
       let userUid = user;
-      if (userUid !== "") {
+      if (userUid !== "" && userUid != this.context.uid) {
         this.props.firebase.db
           .collection("Users")
           .doc(userUid)
@@ -246,15 +246,17 @@ class Teams extends React.Component {
   handleSubmit = (e) => {
     e.preventDefault();
     var teamId = this.context.uid + Date.now();
-
+    this.setState({ loading: true });
     // insert photo into storage
     this.getFileBlob(this.state.file, (blob) => {
       this.props.firebase.storageRef
         .child(`Teams/${teamId}`)
         .put(blob)
-        .then(function (snapshot) {
-          console.log("Uploaded a file!");
-        });
+        .then(
+          console.log("Uploaded a file!"),
+          this.getTeams(),
+          this.setState({ loading: false })
+        );
     });
     // create team object in db
     this.props.firebase.db
@@ -267,6 +269,7 @@ class Teams extends React.Component {
         id: teamId,
         admins: [this.context.uid],
         image: `Teams/${teamId}`,
+        tasks: [],
       });
     //send pending request to join group
     this.sendTeamInvites(teamId);
@@ -282,8 +285,7 @@ class Teams extends React.Component {
         this.props.firebase.db
           .collection("Users")
           .doc(this.context.uid)
-          .update({ teams: teams })
-          .then(console.log(teams), this.getTeams());
+          .update({ teams: teams });
         this.setState({ modalOpen: false });
       });
     e.preventDefault();
