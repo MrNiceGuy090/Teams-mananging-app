@@ -53,10 +53,6 @@ class SingleTeam extends React.Component {
     this.setState({ value: newValue });
   };
 
-  componentDidMount() {
-    console.log(this.props.location);
-  }
-
   render() {
     const { classes } = this.props;
     const isLoading = this.state.loading;

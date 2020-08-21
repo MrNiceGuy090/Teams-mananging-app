@@ -58,6 +58,7 @@ class Whiteboard extends React.Component {
       newTaskTitle: "",
       newTaskDescription: "",
       newTaskStatus: "",
+      taskNames: [],
     };
     this.handleModalClose = this.handleModalClose.bind(this);
     this.handleTaskDescriptionChange = this.handleTaskDescriptionChange.bind(
@@ -98,6 +99,12 @@ class Whiteboard extends React.Component {
       description: this.state.newTaskDescription,
       status: this.state.newTaskStatus,
       participants: [],
+      messages: [],
+    });
+    this.setState((state) => {
+      const list = state.taskNames;
+      list.push(key.id);
+      return { taskNames: list };
     });
     console.log(key.id);
     this.props.firebase.db
@@ -137,7 +144,7 @@ class Whiteboard extends React.Component {
       .get()
       .then((doc) => {
         let teamTasks = doc.data().tasks;
-        console.log(teamTasks);
+        this.setState({ taskNames: teamTasks });
         for (let x of teamTasks) {
           let task = x;
           this.props.firebase.db
@@ -172,59 +179,32 @@ class Whiteboard extends React.Component {
                 <CardContent>
                   {this.state.tasks.map((value, index) => {
                     if (value.status === "to do") {
-                      return <Task dbObject={value} key={index}></Task>;
+                      return (
+                        <Task
+                          dbObject={value}
+                          taskName={this.state.taskNames[index]}
+                          key={index}
+                        ></Task>
+                      );
                     } else return null;
                   })}
                   <IconButton onClick={() => this.addTaskModal("to do")}>
                     <AddIcon></AddIcon>
                   </IconButton>
                 </CardContent>
-
-                <Modal
-                  open={this.state.addTaskModal}
-                  onClose={this.handleModalClose}
-                  BackdropComponent={Backdrop}
-                >
-                  <Fade in={this.state.addTaskModal} className={classes.modal}>
-                    <form>
-                      <h1>New task</h1>
-                      <TextField
-                        required={true}
-                        label="Title"
-                        name="taskTitle"
-                        type="text"
-                        onChange={this.handleTaskTitleChange}
-                        className={classes.textField}
-                      />
-                      <div className={classes.break}></div>
-                      <TextField
-                        multiline
-                        rows={4}
-                        required={true}
-                        label="Description"
-                        name="taskTitle"
-                        type="text"
-                        onChange={this.handleTaskDescriptionChange}
-                        className={classes.textField}
-                      />
-                      <div className={classes.break}></div>
-                      <Button
-                        type="submit"
-                        onClick={this.handleTaskSubmit}
-                        className={classes.topMargin}
-                      >
-                        Submit
-                      </Button>
-                    </form>
-                  </Fade>
-                </Modal>
               </Card>
               <Card className={classes.cardGroup} variant="outlined">
                 <CardHeader title="In progress" />
                 <CardContent>
                   {this.state.tasks.map((value, index) => {
                     if (value.status === "in progress") {
-                      return <Task dbObject={value} key={index}></Task>;
+                      return (
+                        <Task
+                          dbObject={value}
+                          taskName={this.state.taskNames[index]}
+                          key={index}
+                        ></Task>
+                      );
                     } else return null;
                   })}
                   <IconButton onClick={() => this.addTaskModal("in progress")}>
@@ -238,7 +218,13 @@ class Whiteboard extends React.Component {
                 <CardContent>
                   {this.state.tasks.map((value, index) => {
                     if (value.status === "done") {
-                      return <Task dbObject={value} key={index}></Task>;
+                      return (
+                        <Task
+                          dbObject={value}
+                          taskName={this.state.taskNames[index]}
+                          key={index}
+                        ></Task>
+                      );
                     } else return null;
                   })}
                   <IconButton onClick={() => this.addTaskModal("done")}>
@@ -246,6 +232,44 @@ class Whiteboard extends React.Component {
                   </IconButton>
                 </CardContent>
               </Card>
+              <Modal
+                open={this.state.addTaskModal}
+                onClose={this.handleModalClose}
+                BackdropComponent={Backdrop}
+              >
+                <Fade in={this.state.addTaskModal} className={classes.modal}>
+                  <form>
+                    <h1>New task</h1>
+                    <TextField
+                      required={true}
+                      label="Title"
+                      name="taskTitle"
+                      type="text"
+                      onChange={this.handleTaskTitleChange}
+                      className={classes.textField}
+                    />
+                    <div className={classes.break}></div>
+                    <TextField
+                      multiline
+                      rows={4}
+                      required={true}
+                      label="Description"
+                      name="taskTitle"
+                      type="text"
+                      onChange={this.handleTaskDescriptionChange}
+                      className={classes.textField}
+                    />
+                    <div className={classes.break}></div>
+                    <Button
+                      type="submit"
+                      onClick={this.handleTaskSubmit}
+                      className={classes.topMargin}
+                    >
+                      Submit
+                    </Button>
+                  </form>
+                </Fade>
+              </Modal>
             </div>
           )}
         </AuthUserContext.Consumer>

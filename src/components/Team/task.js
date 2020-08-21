@@ -64,9 +64,122 @@ const styles = (theme) => ({
 class Task extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { modalOpen: false, participants: [], participantsPics: [] };
+    this.state = {
+      modalOpen: false,
+      participants: [],
+      participantsPics: [],
+      isJoined: false,
+    };
     this.handleModalClose = this.handleModalClose.bind(this);
     this.handleModalOpen = this.handleModalOpen.bind(this);
+    this.joinTask = this.joinTask.bind(this);
+    this.leaveTask = this.leaveTask.bind(this);
+  }
+
+  joinTask() {
+    // add user to task participants
+    this.props.firebase.db
+      .collection("Tasks")
+      .doc(this.props.taskName)
+      .get()
+      .then((doc) => {
+        let list = doc.data().participants;
+        list.push(this.context.uid);
+        this.props.firebase.db
+          .collection("Tasks")
+          .doc(this.props.taskName)
+          .update({ participants: list })
+          .then(() => {
+            // update state with current user data
+            this.props.firebase.db
+              .collection("Users")
+              .doc(this.context.uid)
+              .get()
+              .then((doc) => {
+                const list = this.state.participants.concat(doc.data());
+                this.setState({ participants: list });
+              });
+
+            this.props.firebase.storageRef
+              .child(`Users/ProfilePics/${this.context.uid}`)
+              .getDownloadURL()
+              .then((url) => {
+                const list = this.state.participantsPics.concat(url);
+                this.setState({ participantsPics: list });
+              });
+          });
+      });
+    // update user's tasks
+    this.props.firebase.db
+      .collection("Users")
+      .doc(this.context.uid)
+      .get()
+      .then((doc) => {
+        let userTasks = doc.data().tasks;
+        userTasks.push(this.props.taskName);
+        this.props.firebase.db
+          .collection("Users")
+          .doc(this.context.uid)
+          .update({ tasks: userTasks });
+      });
+    this.setState({ isJoined: true });
+  }
+
+  leaveTask() {
+    console.log(typeof this.state.participants[0], this.state.participants[0]);
+    // delete task from user's tasks
+    var currentUser = this.context.uid;
+    var curretnTaskName = this.props.taskName;
+    this.props.firebase.db
+      .collection("Users")
+      .doc(currentUser)
+      .get()
+      .then((doc) => {
+        console.log("users", this.state.participants);
+        let userTasks = doc.data().tasks;
+        userTasks = userTasks.filter(function (val) {
+          return val !== curretnTaskName;
+        });
+        this.props.firebase.db
+          .collection("Users")
+          .doc(currentUser)
+          .update({ tasks: userTasks });
+      });
+    // delete user from task participants
+    this.props.firebase.db
+      .collection("Tasks")
+      .doc(this.props.taskName)
+      .get()
+      .then((doc) => {
+        let list = doc.data().participants;
+        list = list.filter(function (val) {
+          return val !== currentUser;
+        });
+        this.props.firebase.db
+          .collection("Tasks")
+          .doc(this.props.taskName)
+          .update({ participants: list })
+          .then(() => {
+            // remove user from task state
+            this.state.participants.map((value, index) => {
+              if (value.uid === currentUser) {
+                console.log(value, index, this.state.participants);
+                let par = this.state.participants.splice(index - 1, 1);
+                let parPics = this.state.participantsPics.splice(index - 1, 1);
+                console.log(par);
+                this.setState({
+                  participants: par,
+                  participantsPics: parPics,
+                });
+
+                console.log(value, index, this.state.participants);
+              }
+            });
+
+            console.log(this.state.participants, "start");
+            this.setState({ isJoined: false });
+          });
+      });
   }
 
   handleModalOpen() {
@@ -86,7 +199,10 @@ class Task extends React.Component {
         .then((doc) => {
           const list = this.state.participants.concat(doc.data());
           this.setState({ participants: list });
-          console.log(this.state.participants);
+          for (let user of list) {
+            if (user.uid === this.context.uid)
+              this.setState({ isJoined: true });
+          }
         });
 
       this.props.firebase.storageRef
@@ -101,6 +217,8 @@ class Task extends React.Component {
 
   render() {
     const { classes } = this.props;
+    let isJoined = this.state.isJoined;
+    console.log(this.state.participants);
     return (
       <div style={{ padding: 0 }}>
         <AuthUserContext.Consumer>
@@ -120,6 +238,7 @@ class Task extends React.Component {
                           size="small"
                           className={classes.avatar}
                           src={value}
+                          key={index}
                         ></Avatar>
                       );
                     })}
@@ -136,7 +255,7 @@ class Task extends React.Component {
                   <div className={classes.taskMain}>
                     <div className={classes.members}>
                       <p>
-                        <b>Members</b>
+                        <b>Participants</b>
                       </p>
                       {/* container for members that participate to the task */}
 
@@ -147,17 +266,17 @@ class Task extends React.Component {
                               display: "flex",
                               flexWrap: "wrap",
                             }}
+                            key={index}
                           >
                             <Avatar
                               size="small"
-                              flexItem
                               style={{
                                 alignSelf: "center",
                                 marginRight: "10px",
                               }}
                               src={this.state.participantsPics[index]}
                             />
-                            <p flexItem>{value.username}</p>
+                            <p>{value.username}</p>
                             <div className={classes.break}></div>
                           </div>
                         );
@@ -179,9 +298,14 @@ class Task extends React.Component {
                         <b>Updates</b>
                       </p>
                       <p>Mesages</p>
-                      <Button> Join </Button>
-                      <Button> Follow </Button>
-                      <Button>Move</Button>
+                      {isJoined ? (
+                        <div>
+                          <Button>Move</Button>
+                          <Button onClick={this.leaveTask}>Leave</Button>
+                        </div>
+                      ) : (
+                        <Button onClick={this.joinTask}> Join </Button>
+                      )}
                     </div>
                   </div>
                 </Fade>
@@ -194,4 +318,5 @@ class Task extends React.Component {
   }
 }
 
+Task.contextType = AuthUserContext;
 export default withFirebase(withStyles(styles)(Task));
