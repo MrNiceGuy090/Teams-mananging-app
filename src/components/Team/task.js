@@ -12,9 +12,7 @@ import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 
 const styles = (theme) => ({
-  cardItem: {
-    cursor: "pointer",
-  },
+  cardItem: {},
   avatar: {
     marginRight: "5px",
   },
@@ -125,6 +123,9 @@ class Task extends React.Component {
     this.setState({ isJoined: true });
   }
 
+  deleteTask() {
+    // to be implemented
+  }
   leaveTask() {
     console.log(typeof this.state.participants[0], this.state.participants[0]);
     // delete task from user's tasks
@@ -161,22 +162,29 @@ class Task extends React.Component {
           .update({ participants: list })
           .then(() => {
             // remove user from task state
-            this.state.participants.map((value, index) => {
-              if (value.uid === currentUser) {
-                console.log(value, index, this.state.participants);
-                let par = this.state.participants.splice(index - 1, 1);
-                let parPics = this.state.participantsPics.splice(index - 1, 1);
-                console.log(par);
+            for (var i = 0; i < this.state.participants.length; i++) {
+              if (this.state.participants[i].uid === currentUser) {
+                let par = Array.prototype.slice.call(this.state.participants);
+                let parPics = Array.prototype.slice.call(
+                  this.state.participantsPics
+                );
+                par.splice(i, 1);
+                parPics.splice(i, 1);
+                console.log(par, i);
+                console.log(parPics);
                 this.setState({
                   participants: par,
                   participantsPics: parPics,
                 });
 
-                console.log(value, index, this.state.participants);
+                console.log(
+                  this.state.participants[i],
+                  i,
+                  this.state.participants
+                );
+                break;
               }
-            });
-
-            console.log(this.state.participants, "start");
+            }
             this.setState({ isJoined: false });
           });
       });
@@ -196,7 +204,17 @@ class Task extends React.Component {
         .collection("Users")
         .doc(user)
         .get()
-        .then((doc) => {
+        .then(async (doc) => {
+          // get pics
+          await this.props.firebase.storageRef
+            .child(`Users/ProfilePics/${user}`)
+            .getDownloadURL()
+            .then((url) => {
+              const list = this.state.participantsPics.concat(url);
+              this.setState({ participantsPics: list });
+            });
+
+          // get users data
           const list = this.state.participants.concat(doc.data());
           this.setState({ participants: list });
           for (let user of list) {
@@ -204,27 +222,22 @@ class Task extends React.Component {
               this.setState({ isJoined: true });
           }
         });
-
-      this.props.firebase.storageRef
-        .child(`Users/ProfilePics/${user}`)
-        .getDownloadURL()
-        .then((url) => {
-          const list = this.state.participantsPics.concat(url);
-          this.setState({ participantsPics: list });
-        });
     }
   }
 
   render() {
     const { classes } = this.props;
     let isJoined = this.state.isJoined;
-    console.log(this.state.participants);
     return (
       <div style={{ padding: 0 }}>
         <AuthUserContext.Consumer>
           {(authUser) => (
             <div>
               <Card
+                draggable
+                onDragStart={(e) =>
+                  this.props.startDrag(e, this.props.taskName)
+                }
                 variant="outlined"
                 className={classes.cardItem}
                 onClick={this.handleModalOpen}
@@ -300,8 +313,8 @@ class Task extends React.Component {
                       <p>Mesages</p>
                       {isJoined ? (
                         <div>
-                          <Button>Move</Button>
                           <Button onClick={this.leaveTask}>Leave</Button>
+                          <Button onClick={this.deleteTask}>Delete</Button>
                         </div>
                       ) : (
                         <Button onClick={this.joinTask}> Join </Button>

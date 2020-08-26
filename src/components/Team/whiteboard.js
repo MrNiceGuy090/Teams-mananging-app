@@ -18,6 +18,7 @@ import {
   MenuItem,
   InputLabel,
 } from "@material-ui/core";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const styles = (theme) => ({
   cardGroup: {
@@ -46,6 +47,10 @@ const styles = (theme) => ({
   textField: {
     width: "100%",
   },
+  droppable: {
+    padding: "5px",
+    backgroundColor: "rgba(51, 170, 51, .2)",
+  },
 });
 
 class Whiteboard extends React.Component {
@@ -67,6 +72,8 @@ class Whiteboard extends React.Component {
     this.handleTaskTitleChange = this.handleTaskTitleChange.bind(this);
     this.handleTaskSubmit = this.handleTaskSubmit.bind(this);
     this.getTasks = this.getTasks.bind(this);
+    this.onDragOver = this.onDragOver.bind(this);
+    this.onDragStart = this.onDragStart.bind(this);
   }
 
   addTaskModal(status) {
@@ -167,6 +174,32 @@ class Whiteboard extends React.Component {
     this.setState({ tabValue: newValue });
   };
 
+  // Drag&Drop functions
+
+  onDragOver = (ev) => {
+    ev.preventDefault();
+  };
+
+  onDragStart = (e, taskName) => {
+    console.log("dragStart", taskName);
+    e.dataTransfer.setData("text/plain", taskName);
+  };
+
+  onDrop = (e, category) => {
+    let id = e.dataTransfer.getData("text");
+    for (let i = 0; i < this.state.taskNames.length; i++) {
+      if (this.state.taskNames[i] === id) {
+        let newTasks = this.state.tasks;
+        newTasks[i].status = category;
+        this.setState({ tasks: newTasks });
+        // override task in database
+        this.props.firebase.db
+          .collection("Tasks")
+          .doc(id)
+          .update({ status: category });
+      }
+    }
+  };
   render() {
     const { classes } = this.props;
     return (
@@ -174,62 +207,94 @@ class Whiteboard extends React.Component {
         <AuthUserContext.Consumer>
           {(authUser) => (
             <div className={classes.container}>
-              <Card className={classes.cardGroup} variant="outlined">
+              <Card
+                className={classes.cardGroup}
+                variant="outlined"
+                key="To do"
+              >
                 <CardHeader title="To do" />
                 <CardContent>
-                  {this.state.tasks.map((value, index) => {
-                    if (value.status === "to do") {
-                      return (
-                        <Task
-                          dbObject={value}
-                          taskName={this.state.taskNames[index]}
-                          key={index}
-                        ></Task>
-                      );
-                    } else return null;
-                  })}
-                  <IconButton onClick={() => this.addTaskModal("to do")}>
-                    <AddIcon></AddIcon>
-                  </IconButton>
+                  <div
+                    className={classes.droppable}
+                    onDragOver={(e) => this.onDragOver(e)}
+                    onDrop={(e) => this.onDrop(e, "to do")}
+                  >
+                    {this.state.tasks.map((value, index) => {
+                      if (value.status === "to do") {
+                        return (
+                          <Task
+                            dbObject={value}
+                            taskName={this.state.taskNames[index]}
+                            key={index}
+                            startDrag={this.onDragStart}
+                          ></Task>
+                        );
+                      } else return null;
+                    })}
+
+                    <IconButton onClick={() => this.addTaskModal("to do")}>
+                      <AddIcon></AddIcon>
+                    </IconButton>
+                  </div>
                 </CardContent>
               </Card>
-              <Card className={classes.cardGroup} variant="outlined">
+              <Card
+                className={classes.cardGroup}
+                variant="outlined"
+                key="In progress"
+              >
                 <CardHeader title="In progress" />
                 <CardContent>
-                  {this.state.tasks.map((value, index) => {
-                    if (value.status === "in progress") {
-                      return (
-                        <Task
-                          dbObject={value}
-                          taskName={this.state.taskNames[index]}
-                          key={index}
-                        ></Task>
-                      );
-                    } else return null;
-                  })}
-                  <IconButton onClick={() => this.addTaskModal("in progress")}>
-                    <AddIcon></AddIcon>
-                  </IconButton>
+                  <div
+                    className={classes.droppable}
+                    onDragOver={(e) => this.onDragOver(e)}
+                    onDrop={(e) => this.onDrop(e, "in progress")}
+                  >
+                    {this.state.tasks.map((value, index) => {
+                      if (value.status === "in progress") {
+                        return (
+                          <Task
+                            dbObject={value}
+                            taskName={this.state.taskNames[index]}
+                            key={index}
+                            startDrag={this.onDragStart}
+                          ></Task>
+                        );
+                      } else return null;
+                    })}
+                    <IconButton
+                      onClick={() => this.addTaskModal("in progress")}
+                    >
+                      <AddIcon></AddIcon>
+                    </IconButton>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card className={classes.cardGroup} variant="outlined">
+              <Card className={classes.cardGroup} variant="outlined" key="Done">
                 <CardHeader title="Done" />
                 <CardContent>
-                  {this.state.tasks.map((value, index) => {
-                    if (value.status === "done") {
-                      return (
-                        <Task
-                          dbObject={value}
-                          taskName={this.state.taskNames[index]}
-                          key={index}
-                        ></Task>
-                      );
-                    } else return null;
-                  })}
-                  <IconButton onClick={() => this.addTaskModal("done")}>
-                    <AddIcon></AddIcon>
-                  </IconButton>
+                  <div
+                    className={classes.droppable}
+                    onDragOver={(e) => this.onDragOver(e)}
+                    onDrop={(e) => this.onDrop(e, "done")}
+                  >
+                    {this.state.tasks.map((value, index) => {
+                      if (value.status === "done") {
+                        return (
+                          <Task
+                            dbObject={value}
+                            taskName={this.state.taskNames[index]}
+                            key={index}
+                            startDrag={this.onDragStart}
+                          ></Task>
+                        );
+                      } else return null;
+                    })}
+                    <IconButton onClick={() => this.addTaskModal("done")}>
+                      <AddIcon></AddIcon>
+                    </IconButton>
+                  </div>
                 </CardContent>
               </Card>
               <Modal
