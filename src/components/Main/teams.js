@@ -114,7 +114,6 @@ class Teams extends React.Component {
             if (this.state.teams.length > this.state.teamsPic.length) {
               this.getTeamsPic(index + 1);
             } else {
-              console.log(this.state);
               this.setState({ loading: false });
             }
           });
@@ -129,7 +128,6 @@ class Teams extends React.Component {
       .get()
       .then((doc) => {
         if (doc.data().teams.length > 0) {
-          console.log(doc.data().teams);
           this.setState({ teams: doc.data().teams });
           this.getTeamsPic(0);
         } else {

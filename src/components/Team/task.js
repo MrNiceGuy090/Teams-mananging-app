@@ -6,7 +6,7 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import CardHeader from "@material-ui/core/CardHeader";
 import Avatar from "@material-ui/core/Avatar";
-import { Divider, Button } from "@material-ui/core";
+import { Divider, Button, TextField } from "@material-ui/core";
 import Modal from "@material-ui/core/Modal";
 import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
@@ -67,11 +67,17 @@ class Task extends React.Component {
       participants: [],
       participantsPics: [],
       isJoined: false,
+      userProfilePic: "",
+      messages: [],
+      messagesPics: [],
+      messageContent: "",
     };
     this.handleModalClose = this.handleModalClose.bind(this);
     this.handleModalOpen = this.handleModalOpen.bind(this);
     this.joinTask = this.joinTask.bind(this);
     this.leaveTask = this.leaveTask.bind(this);
+    this.deleteTask = this.deleteTask.bind(this);
+    this.handleMessageChange = this.handleMessageChange.bind(this);
   }
 
   joinTask() {
@@ -124,10 +130,55 @@ class Task extends React.Component {
   }
 
   deleteTask() {
-    // to be implemented
+    var taskName = this.props.taskName;
+    // delete from team tasks
+    this.props.firebase.db
+      .collection("Teams")
+      .doc(this.props.teamName)
+      .get()
+      .then((doc) => {
+        let oldTasks = doc.data().tasks;
+        let newTasks = oldTasks.filter((value, index) => {
+          return value !== taskName;
+        });
+        // delete task from team tasks
+        this.props.firebase.db
+          .collection("Teams")
+          .doc(this.props.teamName)
+          .update({ tasks: newTasks });
+        // deelete task from team members
+        let members = doc.data().members;
+        for (let x of members) {
+          let member = x;
+          this.props.firebase.db
+            .collection("Users")
+            .doc(member)
+            .get()
+            .then((doc) => {
+              let oldTasks = doc.data().tasks;
+              let newTasks = oldTasks.filter((value, index) => {
+                return value !== taskName;
+              });
+              this.props.firebase.db
+                .collection("Users")
+                .doc(member)
+                .update({ tasks: newTasks });
+            });
+        }
+      });
+    // delete Task
+    this.props.firebase.db
+      .collection("Tasks")
+      .doc(taskName)
+      .get()
+      .then((doc) => doc.ref.delete());
+    // update state
+    this.setState({ modalOpen: false });
+
+    this.props.rerender(this.props.keyIndex);
   }
+
   leaveTask() {
-    console.log(typeof this.state.participants[0], this.state.participants[0]);
     // delete task from user's tasks
     var currentUser = this.context.uid;
     var curretnTaskName = this.props.taskName;
@@ -223,7 +274,61 @@ class Task extends React.Component {
           }
         });
     }
+    // get user profile pic
+    this.props.firebase.storageRef
+      .child(`Users/ProfilePics/${this.context.uid}`)
+      .getDownloadURL()
+      .then((url) => {
+        this.setState({ userProfilePic: url });
+      });
+    // get messages
+    this.props.firebase.db
+      .collection("Tasks")
+      .doc(this.props.taskName)
+      .get()
+      .then((doc) => {
+        var messages = doc.data().messages;
+        this.setState({ messages: messages });
+        // get profile pics for messages
+        messages.map((value, index) => {
+          this.props.firebase.storageRef
+            .child(`Users/ProfilePics/${value.user}`)
+            .getDownloadURL()
+            .then((url) => {
+              let list = this.state.messagesPics.concat(url);
+              this.setState({ messagesPics: list });
+            });
+        });
+      });
   }
+  handleMessageChange(e) {
+    const { name, value } = e.target;
+    this.setState({ messageContent: value });
+  }
+  postMessage = (e) => {
+    e.preventDefault();
+    let messageOb = {
+      user: this.context.uid,
+      content: this.state.messageContent,
+    };
+    let newMessages = this.state.messages.concat(messageOb);
+    this.setState({ messages: newMessages });
+    // user profile pic
+    this.props.firebase.storageRef
+      .child(`Users/ProfilePics/${this.context.uid}`)
+      .getDownloadURL()
+      .then((url) => {
+        const list = this.state.messagesPics.concat(url);
+        this.setState({ messagesPics: list });
+      });
+    // rerender locally
+    this.props.firebase.db
+      .collection("Tasks")
+      .doc(this.props.taskName)
+      .update({ messages: newMessages });
+    // reset form
+    document.getElementById("messagePost").reset();
+  };
 
   render() {
     const { classes } = this.props;
@@ -310,7 +415,51 @@ class Task extends React.Component {
                       <p>
                         <b>Updates</b>
                       </p>
-                      <p>Mesages</p>
+                      <p>Messages</p>
+                      {/* task messages display */}
+                      {this.state.messages.map((value, index) => {
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Avatar
+                              style={{
+                                alignSelf: "center",
+                                marginRight: "10px",
+                              }}
+                              src={this.state.messagesPics[index]}
+                            ></Avatar>
+                            <p style={{ width: "70%" }}>{value.content}</p>
+                          </div>
+                        );
+                      })}
+                      {/*  box to post a new message */}
+                      <form
+                        id="messagePost"
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Avatar
+                          style={{
+                            alignSelf: "center",
+                            marginRight: "10px",
+                          }}
+                          src={this.state.userProfilePic}
+                        ></Avatar>
+                        <TextField
+                          multiline="true"
+                          style={{ width: "70%" }}
+                          onChange={this.handleMessageChange}
+                        ></TextField>
+                        <button onClick={this.postMessage} type="submit">
+                          Post
+                        </button>
+                      </form>
                       {isJoined ? (
                         <div>
                           <Button onClick={this.leaveTask}>Leave</Button>

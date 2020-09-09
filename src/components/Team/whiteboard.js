@@ -74,10 +74,10 @@ class Whiteboard extends React.Component {
     this.getTasks = this.getTasks.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
+    this.deleteTask = this.deleteTask.bind(this);
   }
 
   addTaskModal(status) {
-    console.log(status);
     this.setState({ addTaskModal: true, newTaskStatus: status });
   }
 
@@ -98,7 +98,6 @@ class Whiteboard extends React.Component {
     this.setState({ newTaskDescription: value });
   }
   handleTaskSubmit = async (e) => {
-    console.log("jei");
     e.preventDefault();
     //create tasks and append to current team in db
     let key = await this.props.firebase.db.collection("Tasks").add({
@@ -113,7 +112,6 @@ class Whiteboard extends React.Component {
       list.push(key.id);
       return { taskNames: list };
     });
-    console.log(key.id);
     this.props.firebase.db
       .collection("Teams")
       .doc(this.props.team)
@@ -174,6 +172,19 @@ class Whiteboard extends React.Component {
     this.setState({ tabValue: newValue });
   };
 
+  //delete task called from task component
+
+  deleteTask(index) {
+    let tasksLoc = this.state.tasks;
+    tasksLoc = tasksLoc.filter((value, i) => {
+      return i !== index;
+    });
+    let taskNamesLoc = this.state.taskNames;
+    taskNamesLoc = taskNamesLoc.filter((value, i) => {
+      return i !== index;
+    });
+    this.setState({ tasks: tasksLoc, taskNames: taskNamesLoc });
+  }
   // Drag&Drop functions
 
   onDragOver = (ev) => {
@@ -225,8 +236,11 @@ class Whiteboard extends React.Component {
                           <Task
                             dbObject={value}
                             taskName={this.state.taskNames[index]}
+                            teamName={this.props.team}
                             key={index}
+                            keyIndex={index}
                             startDrag={this.onDragStart}
+                            rerender={this.deleteTask}
                           ></Task>
                         );
                       } else return null;
@@ -257,6 +271,9 @@ class Whiteboard extends React.Component {
                             dbObject={value}
                             taskName={this.state.taskNames[index]}
                             key={index}
+                            keyIndex={index}
+                            teamName={this.props.team}
+                            rerender={this.deleteTask}
                             startDrag={this.onDragStart}
                           ></Task>
                         );
@@ -286,6 +303,9 @@ class Whiteboard extends React.Component {
                             dbObject={value}
                             taskName={this.state.taskNames[index]}
                             key={index}
+                            keyIndex={index}
+                            teamName={this.props.team}
+                            rerender={this.deleteTask}
                             startDrag={this.onDragStart}
                           ></Task>
                         );
